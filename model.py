@@ -34,15 +34,15 @@ class Config():
         self.max_sentence_len = 50
         self.word_embedding_size = 200
         self.GRU1_hidden_size = 200
-        self.GRU2_hidden_size = 200
+        self.GRU2_hidden_size = 50
         self.total_words = 434511
-        self.batch_size = 40
+        # self.batch_size = 40
         self.v_length = 50
 
 
-class model(nn.Module):
+class Model(nn.Module):
     def __init__(self, config):
-        super(model, self).__init__()
+        super(Model, self).__init__()
         self.max_num_utterance = config.max_num_utterance
         self.negative_samples = config.negative_samples
         self.max_sentence_len = config.max_sentence_len
@@ -50,7 +50,7 @@ class model(nn.Module):
         self.GRU1_hidden_size = config.GRU1_hidden_size
         self.GRU2_hidden_size = config.GRU2_hidden_size
         self.total_words = config.total_words
-        self.batch_size = config.batch_size + config.negative_samples * config.batch_size
+        # self.batch_size = config.batch_size + config.negative_samples * config.batch_size
         self.v_length = config.v_length
 
         with open(embedding_file, 'rb') as f:
@@ -198,8 +198,5 @@ class model(nn.Module):
         L = torch.einsum('ij,ijk->jk', alpha, matching_vectors_GRU)
         # batch_size, GRU2_hidden_size
         logits = self.final_linear(L)
-        y_pred = F.softmax(logits)
+        y_pred = F.log_softmax(logits, dim=1)
         return y_pred
-
-
-

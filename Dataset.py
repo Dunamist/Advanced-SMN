@@ -7,14 +7,16 @@ class TrainDataset(DS):
     '''
        utterance:(self.batch_size, self.max_num_utterance, self.max_sentence_len)
        response:(self.batch_size, self.max_sentence_len)
-
+       label:(self.batch_size)
        root 中包含三个文件路径
             utterance_path:应返回list(50W,max_num_utterance,max_sentence_len)
             correct_response_path：应返回list(50W,max_sentence_len)
             error_response_path:应返回list(50W,max_sentence_len)
+
+        注意：经过dataloader操作之后 数据全部会自动变成tensor 根本不需要自己显式的操作
     '''
 
-    def __init__(self, root, transform):
+    def __init__(self, root, transform=None):
         utterance_path, correct_response_path, error_response_path = root
         with open(utterance_path, 'rb') as f:
             self.utterance = pickle.load(f, encoding='bytes')
@@ -60,7 +62,7 @@ class ValidDataset(DS):
             index_path:应返回list(1W)
     '''
 
-    def __init__(self, root, transform):
+    def __init__(self, root, transform=None):
         utterance_path, response_path, index_path = root
         with open(utterance_path, 'rb') as f:
             self.utterance = pickle.load(f, encoding='bytes')
@@ -77,4 +79,7 @@ class ValidDataset(DS):
         utterance = self.utterance[idx]
         responses = self.responses[idx]
         correct_index = self.index[idx]
+        if self.transform is not None:
+            utterance = self.transform(utterance)
+            responses = self.transform(responses)
         return utterance, responses, correct_index

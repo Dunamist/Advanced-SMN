@@ -45,14 +45,10 @@ use_cuda = not args.no_cuda and torch.cuda.is_available()
 device = torch.device("cuda" if use_cuda else "cpu")
 kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
 train_loader = torch.utils.data.DataLoader(
-    TrainDataset(root=train_root_path, transform=transforms.Compose([
-        transforms.ToTensor()
-    ])),
+    TrainDataset(root=train_root_path),
     batch_size=args.batch_size, shuffle=True, **kwargs)
 valid_loader = torch.utils.data.DataLoader(
-    ValidDataset(root=valid_root_path, transform=transforms.Compose([
-        transforms.ToTensor()
-    ])),
+    ValidDataset(root=valid_root_path),
     batch_size=args.valid_batch_size, shuffle=True, **kwargs)
 optimizer = optim.Adam(model.parameters(), lr=args.lr, betas=(args.beta1, args.beta2))
 
@@ -68,7 +64,7 @@ def train(args, model, device, train_loader, optimizer, epoch):
     model.train()
     for batch_idx, (utterance, response, label) in enumerate(train_loader):
         utterance, response, label = utterance.to(device), response.to(device), label.to(device)
-        optimizer.zero_grad()  # 这里边是很多batch 的数据对 对没错 因为模型输入就是batch输入的
+        optimizer.zero_grad()
         output = model(utterance, response)
         loss = F.nll_loss(output, label)
         loss.backward()
@@ -125,7 +121,7 @@ def valid(args, model, device, test_loader):
         ranks = []
         for utterance, responses, correct_index in test_loader:
             correct_index = torch.squeeze(correct_index).item()  # 一个数
-            responses = responses.permute(1, 0, 2)  # 10,1,self.max_sentence_len
+            responses = responses.permute(1, 0, 2)  # ->10,1,self.max_sentence_len
             probabilities = []
             for response in responses:
                 utterance, response = utterance.to(device), response.to(device)
